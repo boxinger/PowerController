@@ -27,7 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "voloop.h"
 #include "PWM.h"
 
 /* USER CODE END Includes */
@@ -100,12 +100,34 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
+  PWM_Init(PWM_TIMERA);
+  PWM_Init(PWM_TIMERB);
+  PWM_Init(PWM_TIMERC);
+  PWM_Init(PWM_TIMERD);
+  PWM_Init(PWM_TIMERE);
+  PWM_Init(PWM_TIMERF);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_A, 0.5f);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_B, 0.5f);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_C, 0.5f);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_D, 0.5f);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_E, 0.5f);
+  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_F, 0.5f);
+  PWM_Start_CHA();
+  PWM_Start_CHB();
+  PWM_Start_CHC();
+  PWM_Start_CHD();
+  PWM_Start_CHE();
+  PWM_Start_CHF();
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+    HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

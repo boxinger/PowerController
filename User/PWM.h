@@ -8,24 +8,39 @@
 #define PWM_TIMER hhrtim1
 #define PWM_MINDUTY 0.05f
 #define PWM_MAXDUTY 0.95f
+#define PWM_TIMER_PRESCALER HRTIM_PRESCALERRATIO_MUL32
+#define PWM_TIMER_PERIOD 27200U
+#define PWM_DEFAULT_CMPARE 13600U
+#define PWM_DEADTIME_PRESCALER HRTIM_TIMDEADTIME_PRESCALERRATIO_MUL8
+#define PWM_DEADTIME_RISING_VALUE 10U
+#define PWM_DEADTIME_FALLING_VALUE 10U
 
 /*
-  * @param  Timers Timer counter(s)
-  *                   This parameter can be any combination of the following values:
-  *                   @arg HRTIM_TIMERID_MASTER
-  *                   @arg HRTIM_TIMERID_TIMER_A
-  *                   @arg HRTIM_TIMERID_TIMER_B
-  *                   @arg HRTIM_TIMERID_TIMER_C
-  *                   @arg HRTIM_TIMERID_TIMER_D
-  *                   @arg HRTIM_TIMERID_TIMER_E
-  *                   @arg HRTIM_TIMERID_TIMER_F
+	* @param  Timer PWM timer enum
+	*                   This parameter can be one of the following values:
+	*                   @arg PWM_TIMERA
+	*                   @arg PWM_TIMERB
+	*                   @arg PWM_TIMERC
+	*                   @arg PWM_TIMERD
+	*                   @arg PWM_TIMERE
+	*                   @arg PWM_TIMERF
+	* @note   PWM_Init only configures and starts the requested timer PWM template.
+	*         HRTIM common initialization and GPIO alternate function configuration
+	*         must still be provided by external board-level code.
 */
-static inline void PWM_Init(uint32_t Timer){
-	HAL_HRTIM_WaveformCounterStart(&PWM_TIMER, Timer);
-}
-static inline void PWM_DeInit(uint32_t Timer){
-	HAL_HRTIM_WaveformCounterStop(&PWM_TIMER, Timer);
-}
+
+typedef enum {
+	PWM_TIMERA = 0U,
+	PWM_TIMERB = 1U,
+	PWM_TIMERC = 2U,
+	PWM_TIMERD = 3U,
+	PWM_TIMERE = 4U,
+	PWM_TIMERF = 5U,
+	PWM_TIMER_COUNT
+} PWM_TimerIdTypeDef;
+
+HAL_StatusTypeDef PWM_Init(PWM_TimerIdTypeDef Timer);
+HAL_StatusTypeDef PWM_DeInit(uint32_t Timer);
 
 static inline void PWM_Start_CHA(){
 	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1);

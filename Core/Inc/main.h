@@ -63,6 +63,8 @@ void Error_Handler(void);
 #define Button_B_GPIO_Port GPIOE
 #define Encoder_button_Pin GPIO_PIN_4
 #define Encoder_button_GPIO_Port GPIOE
+#define BLED_Pin GPIO_PIN_0
+#define BLED_GPIO_Port GPIOC
 #define Button4_Pin GPIO_PIN_12
 #define Button4_GPIO_Port GPIOC
 #define Button3_Pin GPIO_PIN_0
