@@ -2,7 +2,7 @@
 
 static uint32_t pwm_initialized_timers;
 
-static const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT] = {
+const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERID_TIMER_A,
 	HRTIM_TIMERID_TIMER_B,
 	HRTIM_TIMERID_TIMER_C,
@@ -11,7 +11,7 @@ static const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERID_TIMER_F,
 };
 
-static const uint32_t pwm_hal_timer_indexes[PWM_TIMER_COUNT] = {
+const uint32_t pwm_hal_timer_indexes[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERINDEX_TIMER_A,
 	HRTIM_TIMERINDEX_TIMER_B,
 	HRTIM_TIMERINDEX_TIMER_C,
@@ -20,7 +20,7 @@ static const uint32_t pwm_hal_timer_indexes[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERINDEX_TIMER_F,
 };
 
-static const uint32_t pwm_output1s[PWM_TIMER_COUNT] = {
+const uint32_t pwm_output1s[PWM_TIMER_COUNT] = {
 	HRTIM_OUTPUT_TA1,
 	HRTIM_OUTPUT_TB1,
 	HRTIM_OUTPUT_TC1,
@@ -29,7 +29,7 @@ static const uint32_t pwm_output1s[PWM_TIMER_COUNT] = {
 	HRTIM_OUTPUT_TF1,
 };
 
-static const uint32_t pwm_output2s[PWM_TIMER_COUNT] = {
+const uint32_t pwm_output2s[PWM_TIMER_COUNT] = {
 	HRTIM_OUTPUT_TA2,
 	HRTIM_OUTPUT_TB2,
 	HRTIM_OUTPUT_TC2,
@@ -38,31 +38,13 @@ static const uint32_t pwm_output2s[PWM_TIMER_COUNT] = {
 	HRTIM_OUTPUT_TF2,
 };
 
-static const uint32_t pwm_delayed_protection_modes[PWM_TIMER_COUNT] = {
+const uint32_t pwm_delayed_protection_modes[PWM_TIMER_COUNT] = {
 	HRTIM_TIMER_A_B_C_DELAYEDPROTECTION_DISABLED,
 	HRTIM_TIMER_A_B_C_DELAYEDPROTECTION_DISABLED,
 	HRTIM_TIMER_A_B_C_DELAYEDPROTECTION_DISABLED,
 	HRTIM_TIMER_D_E_DELAYEDPROTECTION_DISABLED,
 	HRTIM_TIMER_D_E_DELAYEDPROTECTION_DISABLED,
 	HRTIM_TIMER_F_DELAYEDPROTECTION_DISABLED,
-};
-
-static const uint32_t pwm_updown_modes[PWM_TIMER_COUNT] = {
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-	HRTIM_TIMERUPDOWNMODE_UPDOWN,
-};
-
-static const uint8_t pwm_has_rollover_modes[PWM_TIMER_COUNT] = {
-	1U,
-	0U,
-	0U,
-	0U,
-	0U,
-	0U,
 };
 
 static HAL_StatusTypeDef PWM_ConfigureTimer(PWM_TimerIdTypeDef timerId)
@@ -93,7 +75,7 @@ static HAL_StatusTypeDef PWM_ConfigureTimer(PWM_TimerIdTypeDef timerId)
 		return status;
 	}
 
-	timerCtl.UpDownMode = pwm_updown_modes[timerId];
+	timerCtl.UpDownMode = HRTIM_TIMERUPDOWNMODE_UPDOWN;
 	timerCtl.GreaterCMP1 = HRTIM_TIMERGTCMP1_EQUAL;
 	timerCtl.DualChannelDacEnable = HRTIM_TIMER_DCDE_DISABLED;
 	status = HAL_HRTIM_WaveformTimerControl(&hhrtim1, timerIndex, &timerCtl);
@@ -101,16 +83,14 @@ static HAL_StatusTypeDef PWM_ConfigureTimer(PWM_TimerIdTypeDef timerId)
 		return status;
 	}
 
-	if (pwm_has_rollover_modes[timerId] != 0U) {
-		status = HAL_HRTIM_RollOverModeConfig(
-			&hhrtim1,
-			timerIndex,
-			HRTIM_TIM_FEROM_BOTH | HRTIM_TIM_BMROM_BOTH |
-			HRTIM_TIM_ADROM_BOTH | HRTIM_TIM_OUTROM_BOTH |
-			HRTIM_TIM_ROM_BOTH);
-		if (status != HAL_OK) {
-			return status;
-		}
+	status = HAL_HRTIM_RollOverModeConfig(
+		&hhrtim1,
+		timerIndex,
+		HRTIM_TIM_FEROM_BOTH | HRTIM_TIM_BMROM_BOTH |
+		HRTIM_TIM_ADROM_BOTH | HRTIM_TIM_OUTROM_BOTH |
+		HRTIM_TIM_ROM_BOTH);
+	if (status != HAL_OK) {
+		return status;
 	}
 
 	timerCfg.InterruptRequests = HRTIM_TIM_IT_NONE;

@@ -98,6 +98,7 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   PWM_Init(PWM_TIMERA);
@@ -106,18 +107,18 @@ int main(void)
   PWM_Init(PWM_TIMERD);
   PWM_Init(PWM_TIMERE);
   PWM_Init(PWM_TIMERF);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_A, 0.5f);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_B, 0.5f);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_C, 0.5f);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_D, 0.5f);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_E, 0.5f);
-  PWM_SetDutyCycle(HRTIM_TIMERINDEX_TIMER_F, 0.5f);
-  PWM_Start_CHA();
-  PWM_Start_CHB();
-  PWM_Start_CHC();
-  PWM_Start_CHD();
-  PWM_Start_CHE();
-  PWM_Start_CHF();
+  PWM_SetDutyCycle(PWM_TIMERA, 0.5f);
+  PWM_SetDutyCycle(PWM_TIMERB, 0.5f);
+  PWM_SetDutyCycle(PWM_TIMERC, 0.5f);
+  PWM_SetDutyCycle(PWM_TIMERD, 0.5f);
+  PWM_SetDutyCycle(PWM_TIMERE, 0.5f);
+  PWM_SetDutyCycle(PWM_TIMERF, 0.5f);
+  PWM_Start(PWM_TIMERA);
+  PWM_Start(PWM_TIMERB);
+  PWM_Start(PWM_TIMERC);
+  PWM_Start(PWM_TIMERD);
+  PWM_Start(PWM_TIMERE);
+  PWM_Start(PWM_TIMERF);
 
 
   /* USER CODE END 2 */

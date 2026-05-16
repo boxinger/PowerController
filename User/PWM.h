@@ -39,79 +39,37 @@ typedef enum {
 	PWM_TIMER_COUNT
 } PWM_TimerIdTypeDef;
 
+extern const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT];
+extern const uint32_t pwm_hal_timer_indexes[PWM_TIMER_COUNT];
+extern const uint32_t pwm_output1s[PWM_TIMER_COUNT];
+extern const uint32_t pwm_output2s[PWM_TIMER_COUNT];
+extern const uint32_t pwm_delayed_protection_modes[PWM_TIMER_COUNT];
+
 HAL_StatusTypeDef PWM_Init(PWM_TimerIdTypeDef Timer);
 HAL_StatusTypeDef PWM_DeInit(uint32_t Timer);
 
-static inline void PWM_Start_CHA(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TA2);
-}
-static inline void PWM_Stop_CHA(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TA1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TA2);
-}
-static inline void PWM_Start_CHB(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TB1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TB2);
-}
-static inline void PWM_Stop_CHB(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TB1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TB2);
-}
-static inline void PWM_Start_CHC(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TC1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TC2);
-}
-static inline void PWM_Stop_CHC(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TC1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TC2);
-}
-static inline void PWM_Start_CHD(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TD1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TD2);
-}
-static inline void PWM_Stop_CHD(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TD1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TD2);
-}
-static inline void PWM_Start_CHE(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TE1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TE2);
-}
-static inline void PWM_Stop_CHE(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TE1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TE2);
-}
-static inline void PWM_Start_CHF(){
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TF1);
-	HAL_HRTIM_WaveformOutputStart(&hhrtim1, HRTIM_OUTPUT_TF2);
-}
-static inline void PWM_Stop_CHF(){
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TF1);
-	HAL_HRTIM_WaveformOutputStop(&hhrtim1, HRTIM_OUTPUT_TF2);
+static inline void PWM_Start(PWM_TimerIdTypeDef Timer){
+	HAL_HRTIM_WaveformOutputStart(&PWM_TIMER, pwm_output1s[Timer]);
+	HAL_HRTIM_WaveformOutputStart(&PWM_TIMER, pwm_output2s[Timer]);
 }
 
-/*
-  * @param  TimerIdx Timer index
-  *                   This parameter can be one of the following values:
-  *                   @arg HRTIM_TIMERINDEX_TIMER_A for timer A
-  *                   @arg HRTIM_TIMERINDEX_TIMER_B for timer B
-  *                   @arg HRTIM_TIMERINDEX_TIMER_C for timer C
-  *                   @arg HRTIM_TIMERINDEX_TIMER_D for timer D
-  *                   @arg HRTIM_TIMERINDEX_TIMER_E for timer E
-  *                   @arg HRTIM_TIMERINDEX_TIMER_F for timer F
-*/
-static inline void PWM_SetCompareRaw(uint32_t TimerIdx, uint16_t compare){
-	HRTIM1 -> sTimerxRegs[TimerIdx].CMP1xR = compare;
+static inline void PWM_Stop(PWM_TimerIdTypeDef Timer){
+	HAL_HRTIM_WaveformOutputStop(&PWM_TIMER, pwm_output1s[Timer]);
+	HAL_HRTIM_WaveformOutputStop(&PWM_TIMER, pwm_output2s[Timer]);
 }
-static inline void PWM_SetDutyCycle(uint32_t TimerIdx, float dutyCycle){
+
+static inline void PWM_SetCompareRaw(PWM_TimerIdTypeDef Timer, uint16_t compare){
+	HRTIM1->sTimerxRegs[pwm_hal_timer_indexes[Timer]].CMP1xR = compare;
+}
+
+static inline void PWM_SetDutyCycle(PWM_TimerIdTypeDef Timer, float dutyCycle){
 	if (dutyCycle < PWM_MINDUTY) {
 		dutyCycle = PWM_MINDUTY;
 	} else if (dutyCycle > PWM_MAXDUTY) {
 		dutyCycle = PWM_MAXDUTY;
 	}
 
-	PWM_SetCompareRaw(TimerIdx, (uint16_t)(dutyCycle * (__HAL_HRTIM_GETPERIOD(&hhrtim1, TimerIdx) + 1)));
+	PWM_SetCompareRaw(Timer, (uint16_t)(dutyCycle * (__HAL_HRTIM_GETPERIOD(&PWM_TIMER, pwm_hal_timer_indexes[Timer]) + 1)));
 }
 
 #endif
