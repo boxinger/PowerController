@@ -2,38 +2,91 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "cmake-clean-all",
             "type": "shell",
-            "command": "${command:eide.project.build}",
-            "group": "build",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "if (Test-Path '${workspaceFolder}/build') { Remove-Item '${workspaceFolder}/build' -Recurse -Force }"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": []
         },
         {
-            "label": "flash",
+            "label": "cmake-configure-debug",
             "type": "shell",
-            "command": "${command:eide.project.uploadToDevice}",
-            "group": "build",
+            "command": "cmake",
+            "args": [
+                "--preset",
+                "Debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": []
         },
         {
-            "label": "build and flash",
+            "label": "cmake-build-debug",
             "type": "shell",
-            "command": "${command:eide.project.buildAndFlash}",
-            "group": "build",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "Debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "cmake-configure-debug",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
             "problemMatcher": []
         },
         {
-            "label": "rebuild",
-            "type": "shell",
-            "command": "${command:eide.project.rebuild}",
-            "group": "build",
+            "label": "cmake-clean-and-configure-debug",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "cmake-clean-all",
+                "cmake-configure-debug"
+            ],
             "problemMatcher": []
         },
         {
-            "label": "clean",
+            "label": "flash-debug-elf",
             "type": "shell",
-            "command": "${command:eide.project.clean}",
-            "group": "build",
+            "command": "C:/ST/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe",
+            "args": [
+                "-c",
+                "port=SWD",
+                "mode=UR",
+                "-w",
+                "${workspaceFolder}/build/${config:cmake.defaultBuildPreset}/${workspaceFolderBasename}.elf",
+                "-v",
+                "-rst"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build-and-flash",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "cmake-build-debug",
+                "flash-debug-elf"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "problemMatcher": []
         }
     ]

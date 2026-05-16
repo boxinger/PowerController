@@ -1,0 +1,36 @@
+{
+    "cmake.useCMakePresets": "always",
+    "cmake.configureOnOpen": true,
+    "cmake.defaultConfigurePreset": "Debug",
+    "cmake.defaultBuildPreset": "Debug",
+    "cmake.environment": {
+        "STM32CubeCLT_ROOT": "C:/ST/STM32CubeCLT_1.21.0",
+        "PATH": "C:/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin;C:/ST/STM32CubeCLT_1.21.0/Ninja/bin;C:/ST/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin;C:/ST/STM32CubeCLT_1.21.0/STLink-gdb-server/bin;${env:PATH}"
+    },
+    "terminal.integrated.env.windows": {
+        "STM32CubeCLT_ROOT": "C:/ST/STM32CubeCLT_1.21.0",
+        "Path": "C:/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin;C:/ST/STM32CubeCLT_1.21.0/Ninja/bin;C:/ST/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin;C:/ST/STM32CubeCLT_1.21.0/STLink-gdb-server/bin;${env:Path}"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/Debug/compile_commands.json",
+    "C_Cpp.default.compilerPath": "C:/ST/STM32CubeCLT_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc.exe",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.intelliSenseEngineFallback": "enabled",
+    "C_Cpp.autocomplete": "default",
+    "C_Cpp.codeAnalysis.runAutomatically": true,
+    "C_Cpp.codeAnalysis.clangTidy.enabled": false,
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": false
+    },
+    "editor.suggestOnTriggerCharacters": true,
+    "editor.parameterHints.enabled": true,
+    "files.associations": {
+        "*.ioc": "properties"
+    }
+}

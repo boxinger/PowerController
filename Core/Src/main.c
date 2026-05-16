@@ -28,6 +28,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "PWM.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
