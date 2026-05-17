@@ -1,6 +1,6 @@
 #include "PWM.h"
 
-static uint32_t pwm_initialized_timers;
+static uint32_t pwm_initialized_timers = 0U;
 
 const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERID_TIMER_A,
@@ -103,7 +103,7 @@ static HAL_StatusTypeDef PWM_ConfigureTimer(PWM_TimerIdTypeDef timerId)
 	timerCfg.DeadTimeInsertion = HRTIM_TIMDEADTIMEINSERTION_ENABLED;
 	timerCfg.DelayedProtectionMode = pwm_delayed_protection_modes[timerId];
 	timerCfg.UpdateTrigger = HRTIM_TIMUPDATETRIGGER_NONE;
-	timerCfg.ResetTrigger = HRTIM_TIMRESETTRIGGER_NONE;
+	timerCfg.ResetTrigger = HRTIM_TIMRESETTRIGGER_MASTER_PER;
 	timerCfg.ResetUpdate = HRTIM_TIMUPDATEONRESET_DISABLED;
 	status = HAL_HRTIM_WaveformTimerConfig(&hhrtim1, timerIndex, &timerCfg);
 	if (status != HAL_OK) {
@@ -131,7 +131,7 @@ static HAL_StatusTypeDef PWM_ConfigureTimer(PWM_TimerIdTypeDef timerId)
 	}
 
 	outputCfg.Polarity = HRTIM_OUTPUTPOLARITY_HIGH;
-	outputCfg.SetSource = HRTIM_OUTPUTSET_TIMPER;
+	outputCfg.SetSource = HRTIM_OUTPUTSET_NONE;
 	outputCfg.ResetSource = HRTIM_OUTPUTRESET_TIMCMP1;
 	outputCfg.IdleMode = HRTIM_OUTPUTIDLEMODE_NONE;
 	outputCfg.IdleLevel = HRTIM_OUTPUTIDLELEVEL_INACTIVE;

@@ -101,6 +101,8 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET);
+  HAL_HRTIM_WaveformCounterStart(&PWM_TIMER, HRTIM_TIMERID_MASTER);
   PWM_Init(PWM_TIMERA);
   PWM_Init(PWM_TIMERB);
   PWM_Init(PWM_TIMERC);
