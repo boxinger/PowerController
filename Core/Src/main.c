@@ -28,6 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "oledgfx.h"
 #include "voloop.h"
 #include "PWM.h"
 
@@ -52,16 +53,48 @@
 
 /* USER CODE BEGIN PV */
 
+static uint8_t s_oledInitOk = 0U;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
+static void OLED_DrawDemoFrame(uint32_t frameIndex);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+static void OLED_DrawDemoFrame(uint32_t frameIndex)
+{
+  uint16_t x;
+  uint16_t bar_x;
+
+  (void)OLEDGFX_Clear();
+
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "OLED GFX", OLEDGFX_Clip);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "Frame:", OLEDGFX_Clip);
+  OLEDGFX_ShowNum(OLEDGFX_COL_8, OLEDGFX_LINE_2, frameIndex, 4U);
+
+  for (x = 0U; x < OLEDGFX_WIDTH; x++)
+  {
+    OLEDGFX_DrawPoint(x, 0U, 1U);
+    OLEDGFX_DrawPoint(x, (uint16_t)(OLEDGFX_HEIGHT - 1U), 1U);
+  }
+
+  bar_x = (uint16_t)(frameIndex % (OLEDGFX_WIDTH - 16U));
+  for (x = bar_x; x < (uint16_t)(bar_x + 16U); x++)
+  {
+    OLEDGFX_DrawPoint(x, OLEDGFX_LINE_4 + 8U, 1U);
+    OLEDGFX_DrawPoint(x, OLEDGFX_LINE_4 + 9U, 1U);
+    OLEDGFX_DrawPoint(x, OLEDGFX_LINE_4 + 10U, 1U);
+  }
+
+  (void)OLEDGFX_Submit();
+}
 
 /* USER CODE END 0 */
 
@@ -124,6 +157,15 @@ int main(void)
   PWM_Start(PWM_TIMERE);
   PWM_Start(PWM_TIMERF);
 
+  if (OLEDGFX_Init() == OLEDGFX_OK)
+  {
+    OLED_DrawDemoFrame(0U);
+    if (OLEDGFX_Update() != OLEDGFX_ERROR)
+    {
+      s_oledInitOk = 1U;
+    }
+  }
+
 
   /* USER CODE END 2 */
 
@@ -131,8 +173,30 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
-    HAL_Delay(1000);
+    static uint32_t lastBlinkTick = 0U;
+    static uint32_t lastFrameTick = 0U;
+    static uint32_t frameIndex = 0U;
+    uint32_t now;
+
+    now = HAL_GetTick();
+
+    if ((now - lastBlinkTick) >= 500U)
+    {
+      lastBlinkTick = now;
+      HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
+    }
+
+    if (s_oledInitOk != 0U)
+    {
+      if ((now - lastFrameTick) >= 100U)
+      {
+        lastFrameTick = now;
+        OLED_DrawDemoFrame(frameIndex++);
+      }
+
+      (void)OLEDGFX_Update();
+    }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -187,6 +251,30 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  if (hi2c->Instance == I2C1)
+  {
+    OLEDGFX_TxCpltCallback();
+  }
+}
+
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+  if (hi2c->Instance == I2C1)
+  {
+    OLEDGFX_TxCpltCallback();
+  }
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
+{
+  if (hi2c->Instance == I2C1)
+  {
+    OLEDGFX_ErrorCallback();
+  }
+}
 
 /* USER CODE END 4 */
 

@@ -48,6 +48,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     ${CMAKE_CURRENT_SOURCE_DIR}/User/PWM.c
     ${CMAKE_CURRENT_SOURCE_DIR}/User/oledll.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/User/oledgfx.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/User/button.c
 )
 
 # Add include paths

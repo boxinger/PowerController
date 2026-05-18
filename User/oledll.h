@@ -1,5 +1,5 @@
-#ifndef __OLEDLL_H
-#define __OLEDLL_H
+#ifndef OLEDLL_H
+#define OLEDLL_H
 
 #include <stdint.h>
 
