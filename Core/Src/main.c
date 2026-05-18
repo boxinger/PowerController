@@ -28,6 +28,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "encoder.h"
 #include "oledgfx.h"
 #include "voloop.h"
 #include "PWM.h"
@@ -61,14 +62,14 @@ static uint8_t s_oledInitOk = 0U;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void OLED_DrawDemoFrame(uint32_t frameIndex);
+static void OLED_DrawDemoFrame(uint32_t frameIndex, int16_t encoderCount, int16_t encoderPopCount);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void OLED_DrawDemoFrame(uint32_t frameIndex)
+static void OLED_DrawDemoFrame(uint32_t frameIndex, int16_t encoderCount, int16_t encoderPopCount)
 {
   uint16_t x;
   uint16_t bar_x;
@@ -78,6 +79,10 @@ static void OLED_DrawDemoFrame(uint32_t frameIndex)
   OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "OLED GFX", OLEDGFX_Clip);
   OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "Frame:", OLEDGFX_Clip);
   OLEDGFX_ShowNum(OLEDGFX_COL_8, OLEDGFX_LINE_2, frameIndex, 4U);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "E:", OLEDGFX_Clip);
+  OLEDGFX_ShowSignedNum(OLEDGFX_COL_3, OLEDGFX_LINE_3, encoderCount, 4U);
+  OLEDGFX_ShowString(OLEDGFX_COL_9, OLEDGFX_LINE_3, "P:", OLEDGFX_Clip);
+  OLEDGFX_ShowSignedNum(OLEDGFX_COL_11, OLEDGFX_LINE_3, encoderPopCount, 3U);
 
   for (x = 0U; x < OLEDGFX_WIDTH; x++)
   {
@@ -136,6 +141,9 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
+  Encoder_Init();
+  Encoder_Clear();
+
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET);
   HAL_HRTIM_WaveformCounterStart(&PWM_TIMER, HRTIM_TIMERID_MASTER);
   PWM_Init(PWM_TIMERA);
@@ -159,7 +167,7 @@ int main(void)
 
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
-    OLED_DrawDemoFrame(0U);
+    OLED_DrawDemoFrame(0U, Encoder_GetCount(), 0);
     if (OLEDGFX_Update() != OLEDGFX_ERROR)
     {
       s_oledInitOk = 1U;
@@ -176,6 +184,8 @@ int main(void)
     static uint32_t lastBlinkTick = 0U;
     static uint32_t lastFrameTick = 0U;
     static uint32_t frameIndex = 0U;
+    int16_t encoderCount;
+    int16_t encoderPopCount;
     uint32_t now;
 
     now = HAL_GetTick();
@@ -191,7 +201,9 @@ int main(void)
       if ((now - lastFrameTick) >= 100U)
       {
         lastFrameTick = now;
-        OLED_DrawDemoFrame(frameIndex++);
+        encoderCount = Encoder_GetCount();
+        // encoderPopCount = Encoder_PopCount();
+        OLED_DrawDemoFrame(frameIndex++, encoderCount, encoderPopCount);
       }
 
       (void)OLEDGFX_Update();
