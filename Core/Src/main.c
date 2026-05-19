@@ -33,6 +33,7 @@
 #include "voloop.h"
 #include "PWM.h"
 #include "buttonAndLED.h"
+#include "sample.h"
 
 /* USER CODE END Includes */
 
@@ -56,7 +57,7 @@
 /* USER CODE BEGIN PV */
 
 static uint8_t s_oledInitOk = 0U;
-static int16_t count = 0;
+static SAMPLE_StatusTypeDef s_sampleStatus = SAMPLE_BUSY;
 
 /* USER CODE END PV */
 
@@ -64,27 +65,49 @@ static int16_t count = 0;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void OLED_DrawDemoFrame(uint32_t frameIndex, int16_t encoderCount, int16_t encoderPopCount);
+static void OLED_DrawSampleFrame(uint32_t frameIndex);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void OLED_DrawDemoFrame(uint32_t frameIndex, int16_t encoderCount, int16_t encoderPopCount)
+static void OLED_DrawSampleFrame(uint32_t frameIndex)
 {
+  uint16_t ch1Raw;
+  uint16_t ch2Raw;
+  float ch1Voltage;
+  float ch2Voltage;
   uint16_t x;
   uint16_t bar_x;
 
   (void)OLEDGFX_Clear();
 
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "OLED GFX", OLEDGFX_Clip);
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "Frame:", OLEDGFX_Clip);
-  OLEDGFX_ShowNum(OLEDGFX_COL_8, OLEDGFX_LINE_2, frameIndex, 4U);
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "E:", OLEDGFX_Clip);
-  OLEDGFX_ShowSignedNum(OLEDGFX_COL_3, OLEDGFX_LINE_3, encoderCount, 4U);
-  OLEDGFX_ShowString(OLEDGFX_COL_9, OLEDGFX_LINE_3, "P:", OLEDGFX_Clip);
-  OLEDGFX_ShowSignedNum(OLEDGFX_COL_11, OLEDGFX_LINE_3, encoderPopCount, 3U);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "Sample Test", OLEDGFX_Clip);
+
+  if (s_sampleStatus == SAMPLE_OK)
+  {
+    ch1Raw = Sample_GetRaw(Sample_CH1);
+    ch2Raw = Sample_GetRaw(Sample_CH2);
+    ch1Voltage = Sample_GetPinVoltage(Sample_CH1);
+    ch2Voltage = Sample_GetPinVoltage(Sample_CH2);
+
+    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "C1:", OLEDGFX_Clip);
+    OLEDGFX_ShowNum(OLEDGFX_COL_5, OLEDGFX_LINE_2, ch1Raw, 4U);
+    OLEDGFX_ShowString(OLEDGFX_COL_10, OLEDGFX_LINE_2, "V:", OLEDGFX_Clip);
+    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_2, ch1Voltage, 1U, 2U);
+
+    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "C2:", OLEDGFX_Clip);
+    OLEDGFX_ShowNum(OLEDGFX_COL_5, OLEDGFX_LINE_3, ch2Raw, 4U);
+    OLEDGFX_ShowString(OLEDGFX_COL_10, OLEDGFX_LINE_3, "V:", OLEDGFX_Clip);
+    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_3, ch2Voltage, 1U, 2U);
+  }
+  else
+  {
+    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "Sample init err", OLEDGFX_Clip);
+    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "Code:", OLEDGFX_Clip);
+    OLEDGFX_ShowNum(OLEDGFX_COL_7, OLEDGFX_LINE_3, (uint32_t)s_sampleStatus, 1U);
+  }
 
   for (x = 0U; x < OLEDGFX_WIDTH; x++)
   {
@@ -165,6 +188,7 @@ int main(void)
   PWM_Start(PWM_TIMERD);
   PWM_Start(PWM_TIMERE);
   PWM_Start(PWM_TIMERF);
+  s_sampleStatus = Sample_Init();
   LED_SetLED1State(0U);
   LED_SetLED2State(0U);
   LED_SetLED3State(0U);
@@ -172,16 +196,12 @@ int main(void)
 
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
-    OLED_DrawDemoFrame(0U, Encoder_GetCount(), 0);
+    OLED_DrawSampleFrame(0U);
     if (OLEDGFX_Update() != OLEDGFX_ERROR)
     {
       s_oledInitOk = 1U;
     }
   }
-
-  uint32_t* uid1 = (uint32_t*)UID_BASE;
-  uint32_t* uid2 = (uint32_t*)(UID_BASE + 4U);
-  uint32_t* uid3 = (uint32_t*)(UID_BASE + 8U);
 
 
   /* USER CODE END 2 */
@@ -193,8 +213,6 @@ int main(void)
     static uint32_t lastBlinkTick = 0U;
     static uint32_t lastFrameTick = 0U;
     static uint32_t frameIndex = 0U;
-    int16_t encoderCount;
-    int16_t encoderPopCount;
     uint32_t now;
 
     now = HAL_GetTick();
@@ -210,11 +228,7 @@ int main(void)
       if ((now - lastFrameTick) >= 100U)
       {
         lastFrameTick = now;
-        encoderCount = Encoder_GetCount();
-        encoderPopCount = Encoder_PopCount();
-        count += encoderPopCount;
-        OLEDGFX_ShowHexNum(OLEDGFX_COL_1, OLEDGFX_LINE_4, *uid1, 8U);
-        // OLED_DrawDemoFrame(frameIndex++, count, encoderPopCount);
+        OLED_DrawSampleFrame(frameIndex++);
       }
 
       (void)OLEDGFX_Update();
