@@ -122,7 +122,7 @@ void HAL_TIM_Encoder_MspInit(TIM_HandleTypeDef* tim_encoderHandle)
     PE2     ------> TIM3_CH1
     PE3     ------> TIM3_CH2
     */
-    GPIO_InitStruct.Pin = Button_A_Pin|Button_B_Pin;
+    GPIO_InitStruct.Pin = Encoder_A_Pin|Encoder_B_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -166,7 +166,7 @@ void HAL_TIM_Encoder_MspDeInit(TIM_HandleTypeDef* tim_encoderHandle)
     PE2     ------> TIM3_CH1
     PE3     ------> TIM3_CH2
     */
-    HAL_GPIO_DeInit(GPIOE, Button_A_Pin|Button_B_Pin);
+    HAL_GPIO_DeInit(GPIOE, Encoder_A_Pin|Encoder_B_Pin);
 
   /* USER CODE BEGIN TIM3_MspDeInit 1 */
 

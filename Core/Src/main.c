@@ -32,6 +32,7 @@
 #include "oledgfx.h"
 #include "voloop.h"
 #include "PWM.h"
+#include "buttonAndLED.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +56,7 @@
 /* USER CODE BEGIN PV */
 
 static uint8_t s_oledInitOk = 0U;
+static int16_t count = 0;
 
 /* USER CODE END PV */
 
@@ -144,7 +146,6 @@ int main(void)
   Encoder_Init();
   Encoder_Clear();
 
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET);
   HAL_HRTIM_WaveformCounterStart(&PWM_TIMER, HRTIM_TIMERID_MASTER);
   PWM_Init(PWM_TIMERA);
   PWM_Init(PWM_TIMERB);
@@ -164,6 +165,10 @@ int main(void)
   PWM_Start(PWM_TIMERD);
   PWM_Start(PWM_TIMERE);
   PWM_Start(PWM_TIMERF);
+  LED_SetLED1State(0U);
+  LED_SetLED2State(0U);
+  LED_SetLED3State(0U);
+  LED_SetLED4State(0U);
 
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
@@ -173,6 +178,10 @@ int main(void)
       s_oledInitOk = 1U;
     }
   }
+
+  uint32_t* uid1 = (uint32_t*)UID_BASE;
+  uint32_t* uid2 = (uint32_t*)(UID_BASE + 4U);
+  uint32_t* uid3 = (uint32_t*)(UID_BASE + 8U);
 
 
   /* USER CODE END 2 */
@@ -202,11 +211,49 @@ int main(void)
       {
         lastFrameTick = now;
         encoderCount = Encoder_GetCount();
-        // encoderPopCount = Encoder_PopCount();
-        OLED_DrawDemoFrame(frameIndex++, encoderCount, encoderPopCount);
+        encoderPopCount = Encoder_PopCount();
+        count += encoderPopCount;
+        OLEDGFX_ShowHexNum(OLEDGFX_COL_1, OLEDGFX_LINE_4, *uid1, 8U);
+        // OLED_DrawDemoFrame(frameIndex++, count, encoderPopCount);
       }
 
       (void)OLEDGFX_Update();
+    }
+
+    if (Button_GetButton1State() != 0U)
+    {
+      LED_SetLED1State(1U);
+    }
+    else
+    {
+      LED_SetLED1State(0U);
+    }
+
+    if (Button_GetButton2State() != 0U)
+    {
+      LED_SetLED2State(1U);
+    }
+    else
+    {
+      LED_SetLED2State(0U);
+    }
+
+    if (Button_GetButton3State() != 0U)
+    {
+      LED_SetLED3State(1U);
+    }
+    else
+    {
+      LED_SetLED3State(0U);
+    }
+
+    if (Button_GetEncoderButtonState() != 0U)
+    {
+      LED_SetLED4State(1U);
+    }
+    else
+    {
+      LED_SetLED4State(0U);
     }
 
     /* USER CODE END WHILE */
