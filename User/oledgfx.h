@@ -60,16 +60,17 @@ static inline OLEDGFX_StatusTypeDef OLEDGFX_Update(void){
 void OLEDGFX_DrawPoint(uint16_t x, uint16_t y, uint8_t on);
 void OLEDGFX_ShowChar(uint16_t x, uint16_t y, char c);
 void OLEDGFX_ShowString(uint16_t x,
-													  uint16_t y,
-													  const char* str,
-													   OLEDGFX_TextModeTypeDef mode);
+						uint16_t y,
+						const char* str,
+						OLEDGFX_TextModeTypeDef mode);
 void OLEDGFX_ShowNum(uint16_t x, uint16_t y, uint32_t number, uint8_t length);
 void OLEDGFX_ShowSignedNum(uint16_t x, uint16_t y, int32_t number, uint8_t length);
+void OLEDGFX_ShowHexNum(uint16_t x, uint16_t y, uint32_t number, uint8_t length);
 void OLEDGFX_ShowFloat(uint16_t x,
-													uint16_t y,
-													float number,
-													uint8_t width,
-													uint8_t precision);
+						uint16_t y,
+						float number,
+						uint8_t width,
+						uint8_t precision);
 
 static inline void OLEDGFX_TxCpltCallback(void){
     OLEDLL_TxCpltCallback();

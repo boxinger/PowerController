@@ -12,6 +12,7 @@
 #define OLEDGFX_ASCII_LAST           '~'
 #define OLEDGFX_FONT_BYTES_PER_CHAR  16U
 #define OLEDGFX_MAX_UINT32_DIGITS    10U
+#define OLEDGFX_MAX_HEX_DIGITS       8U
 #define OLEDGFX_MAX_FLOAT_WIDTH      10U
 #define OLEDGFX_MAX_FLOAT_PRECISION  6U
 #define OLEDGFX_FLOAT_BUFFER_SIZE    20U
@@ -24,6 +25,10 @@ static uint8_t OLEDGFX_FormatUnsigned(char* buffer,
 									  uint8_t buffer_size,
 									  uint32_t value,
 									  uint8_t min_width);
+static uint8_t OLEDGFX_FormatHex(char* buffer,
+								  uint8_t buffer_size,
+								  uint32_t value,
+								  uint8_t min_width);
 
 static OLEDGFX_StatusTypeDef OLEDGFX_FromLLStatus(OLEDLL_StatusTypeDef status)
 {
@@ -75,6 +80,53 @@ static uint8_t OLEDGFX_FormatUnsigned(char* buffer,
 		value /= 10U;
 		digit_count++;
 	} while ((value > 0U) && (digit_count < OLEDGFX_MAX_UINT32_DIGITS));
+
+	write_count = (digit_count > min_width) ? digit_count : min_width;
+	if (write_count >= buffer_size) {
+		write_count = (uint8_t)(buffer_size - 1U);
+	}
+
+	index = 0U;
+	while (index < (uint8_t)(write_count - digit_count)) {
+		buffer[index] = '0';
+		index++;
+	}
+
+	while (digit_count > 0U) {
+		buffer[index] = reversed[digit_count - 1U];
+		digit_count--;
+		index++;
+	}
+
+	buffer[index] = '\0';
+
+	return index;
+}
+
+static uint8_t OLEDGFX_FormatHex(char* buffer,
+								  uint8_t buffer_size,
+								  uint32_t value,
+								  uint8_t min_width)
+{
+	static const char hex_digits[] = "0123456789ABCDEF";
+	char reversed[OLEDGFX_MAX_HEX_DIGITS];
+	uint8_t digit_count = 0U;
+	uint8_t write_count;
+	uint8_t index;
+
+	if ((buffer == NULL) || (buffer_size == 0U)) {
+		return 0U;
+	}
+
+	if (min_width > OLEDGFX_MAX_HEX_DIGITS) {
+		min_width = OLEDGFX_MAX_HEX_DIGITS;
+	}
+
+	do {
+		reversed[digit_count] = hex_digits[value & 0x0FU];
+		value >>= 4U;
+		digit_count++;
+	} while ((value > 0U) && (digit_count < OLEDGFX_MAX_HEX_DIGITS));
 
 	write_count = (digit_count > min_width) ? digit_count : min_width;
 	if (write_count >= buffer_size) {
@@ -246,6 +298,22 @@ void OLEDGFX_ShowSignedNum(uint16_t x, uint16_t y, int32_t number, uint8_t lengt
 		magnitude = (uint32_t)number;
 		OLEDGFX_ShowNum(x, y, magnitude, length);
 	}
+}
+
+void OLEDGFX_ShowHexNum(uint16_t x, uint16_t y, uint32_t number, uint8_t length)
+{
+	char text[OLEDGFX_MAX_HEX_DIGITS + 1U];
+
+	if (length == 0U) {
+		length = 1U;
+	}
+
+	if (length > OLEDGFX_MAX_HEX_DIGITS) {
+		length = OLEDGFX_MAX_HEX_DIGITS;
+	}
+
+	(void)OLEDGFX_FormatHex(text, (uint8_t)sizeof(text), number, length);
+	OLEDGFX_ShowString(x, y, text, OLEDGFX_Clip);
 }
 
 void OLEDGFX_ShowFloat(uint16_t x,
