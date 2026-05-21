@@ -88,10 +88,10 @@ static void OLED_DrawSampleFrame(uint32_t frameIndex)
 
   if (s_sampleStatus == SAMPLE_OK)
   {
-    ch1Raw = Sample_GetRaw(Sample_CH1);
-    ch2Raw = Sample_GetRaw(Sample_CH2);
-    ch1Voltage = Sample_GetPinVoltage(Sample_CH1);
-    ch2Voltage = Sample_GetPinVoltage(Sample_CH2);
+    ch1Raw = Sample_GetRaw(Sample_CH15);
+    ch2Raw = Sample_GetRaw(Sample_CH12);
+    ch1Voltage = Sample_GetPinVoltage(Sample_CH15);
+    ch2Voltage = Sample_GetPinVoltage(Sample_CH12);
 
     OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "C1:", OLEDGFX_Clip);
     OLEDGFX_ShowNum(OLEDGFX_COL_5, OLEDGFX_LINE_2, ch1Raw, 4U);
@@ -166,6 +166,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM6_Init();
   MX_ADC2_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
 
   Encoder_Init();
