@@ -34,6 +34,7 @@
 #include "PWM.h"
 #include "buttonAndLED.h"
 #include "sample.h"
+#include "scheduler.h"
 
 /* USER CODE END Includes */
 
@@ -164,6 +165,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_TIM6_Init();
+  MX_ADC2_Init();
   /* USER CODE BEGIN 2 */
 
   Encoder_Init();
@@ -189,6 +191,13 @@ int main(void)
   PWM_Start(PWM_TIMERE);
   PWM_Start(PWM_TIMERF);
   s_sampleStatus = Sample_Init();
+  Scheduler_Init();
+
+  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
   LED_SetLED1State(0U);
   LED_SetLED2State(0U);
   LED_SetLED3State(0U);
@@ -234,40 +243,28 @@ int main(void)
       (void)OLEDGFX_Update();
     }
 
-    if (Button_GetButton1State() != 0U)
+    if (Scheduler_Button1State == Scheduler_Pending)
     {
-      LED_SetLED1State(1U);
-    }
-    else
-    {
-      LED_SetLED1State(0U);
+      Scheduler_ClearButton1Pending();
+      HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     }
 
-    if (Button_GetButton2State() != 0U)
+    if (Scheduler_Button2State == Scheduler_Pending)
     {
-      LED_SetLED2State(1U);
-    }
-    else
-    {
-      LED_SetLED2State(0U);
+      Scheduler_ClearButton2Pending();
+      HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
     }
 
-    if (Button_GetButton3State() != 0U)
+    if (Scheduler_Button3State == Scheduler_Pending)
     {
-      LED_SetLED3State(1U);
-    }
-    else
-    {
-      LED_SetLED3State(0U);
+      Scheduler_ClearButton3Pending();
+      HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
     }
 
-    if (Button_GetEncoderButtonState() != 0U)
+    if (Scheduler_Button4State == Scheduler_Pending)
     {
-      LED_SetLED4State(1U);
-    }
-    else
-    {
-      LED_SetLED4State(0U);
+      Scheduler_ClearButton4Pending();
+      HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
     }
 
     /* USER CODE END WHILE */

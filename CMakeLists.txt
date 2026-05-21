@@ -36,6 +36,7 @@ add_executable(${CMAKE_PROJECT_NAME})
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
+
 add_subdirectory(voloop)
 
 # Link directories setup
@@ -51,12 +52,14 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/User/oledgfx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/User/encoder.c
     ${CMAKE_CURRENT_SOURCE_DIR}/User/sample.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/App/scheduler.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
-    User
+    ${CMAKE_CURRENT_SOURCE_DIR}/User
+    ${CMAKE_CURRENT_SOURCE_DIR}/App
 )
 
 # Add project symbols (macros)
