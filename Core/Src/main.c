@@ -233,13 +233,14 @@ int main(void)
       HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_0);
     }
 
-    if (s_oledInitOk != 0U)
+    if (Scheduler_OLEDUpdateState == Scheduler_Pending)
     {
-      if ((now - lastFrameTick) >= 100U)
-      {
-        lastFrameTick = now;
+      // if ((now - lastFrameTick) >= 100U)
+      // {
+      //   lastFrameTick = now;
+      Scheduler_ClearOLEDUpdatePending();
         OLED_DrawSampleFrame(frameIndex++);
-      }
+      // }
 
       (void)OLEDGFX_Update();
     }

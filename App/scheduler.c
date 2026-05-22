@@ -1,8 +1,6 @@
 #include "scheduler.h"
 #include <stdint.h>
 
-#define Scheduler_ButtonScaler 50U
-static uint16_t s_buttonCounter = 0U;
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button1State = Scheduler_Unpending;
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button2State = Scheduler_Unpending;
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button3State = Scheduler_Unpending;
@@ -59,13 +57,28 @@ static void s_buttonUpdate(void){
     lastEncoderButtonState = currentEncoderButtonState;
 }
 
+volatile Scheduler_PendingStatusTypeDef Scheduler_OLEDUpdateState = Scheduler_Unpending;
+static void s_OLEDUpdate(void){
+    Scheduler_OLEDUpdateState = Scheduler_Pending;
+}
+
+#define Scheduler_ButtonUpdateScaler 50U
+#define Scheduler_OLEDUpdateScaler 10U
+static uint16_t s_buttonCounter = 0U;
+static uint16_t s_oledCounter = 0U;
+
 void Scheduler_Update(void){
     s_buttonCounter++;
-    if (s_buttonCounter >= Scheduler_ButtonScaler)
-    {
+    if (s_buttonCounter >= Scheduler_ButtonUpdateScaler) {
         s_buttonCounter = 0U;
 
         s_buttonUpdate();
+    }
+    s_oledCounter++;
+    if (s_oledCounter >= Scheduler_OLEDUpdateScaler) {
+        s_oledCounter = 0U;
+
+        s_OLEDUpdate();
     }
 
 }

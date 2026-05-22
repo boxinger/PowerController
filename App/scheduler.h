@@ -13,6 +13,7 @@ volatile extern Scheduler_PendingStatusTypeDef Scheduler_Button2State;
 volatile extern Scheduler_PendingStatusTypeDef Scheduler_Button3State;
 volatile extern Scheduler_PendingStatusTypeDef Scheduler_Button4State;
 volatile extern Scheduler_PendingStatusTypeDef Scheduler_EncoderButtonState;
+volatile extern Scheduler_PendingStatusTypeDef Scheduler_OLEDUpdateState;
 static inline void Scheduler_ClearButton1Pending(void){
     Scheduler_Button1State = Scheduler_Unpending;
 }
@@ -27,6 +28,9 @@ static inline void Scheduler_ClearButton4Pending(void){
 }
 static inline void Scheduler_ClearEncoderButtonPending(void){
     Scheduler_EncoderButtonState = Scheduler_Unpending;
+}
+static inline void Scheduler_ClearOLEDUpdatePending(void){
+    Scheduler_OLEDUpdateState = Scheduler_Unpending;
 }
 __weak void Scheduler_Button1Callback(void);
 __weak void Scheduler_Button2Callback(void);
