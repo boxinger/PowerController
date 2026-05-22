@@ -15,18 +15,30 @@ SAMPLE_StatusTypeDef Sample_Init(void){
 		return SAMPLE_ERROR;
 	}
 
-    HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
-    HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
-    HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED);
+    if (HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
+    if (HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
+    if (HAL_ADCEx_Calibration_Start(&hadc3, ADC_SINGLE_ENDED) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
 
 	if (HAL_ADCEx_InjectedPollForConversion(&hadc1, SAMPLE_INJECTED_TIMEOUT_MS) != HAL_OK) {
 		return SAMPLE_TIMEOUT;
 	}
 
 	s_vrefintRaw = (uint16_t)HAL_ADCEx_InjectedGetValue(&hadc1, ADC_INJECTED_RANK_1);
-    HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&SAMPLE_Buffer[0], 3);
-    HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&SAMPLE_Buffer[3], 4);
-    HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&SAMPLE_Buffer[7], 2);
+    if (HAL_ADC_Start_DMA(&hadc1, (uint32_t*)&SAMPLE_Buffer[0], 3) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
+    if (HAL_ADC_Start_DMA(&hadc2, (uint32_t*)&SAMPLE_Buffer[3], 4) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
+    if (HAL_ADC_Start_DMA(&hadc3, (uint32_t*)&SAMPLE_Buffer[7], 2) != HAL_OK) {
+        return SAMPLE_ERROR;
+    }
 	return SAMPLE_OK;
 }
 
