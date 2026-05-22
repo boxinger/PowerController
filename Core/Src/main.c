@@ -88,20 +88,20 @@ static void OLED_DrawSampleFrame(uint32_t frameIndex)
 
   if (s_sampleStatus == SAMPLE_OK)
   {
-    ch1Raw = Sample_GetRaw(Sample_CH15);
+    ch1Raw = Sample_GetRaw(Sample_CH4);
     ch2Raw = Sample_GetRaw(Sample_CH12);
-    ch1Voltage = Sample_GetPinVoltage(Sample_CH15);
-    ch2Voltage = Sample_GetPinVoltage(Sample_CH12);
+    ch1Voltage = Sample_GetTheoreticalCurrent(Sample_CH4);
+    ch2Voltage = Sample_GetTheoreticalVoltage(Sample_CH12);
 
     OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "C1:", OLEDGFX_Clip);
     OLEDGFX_ShowNum(OLEDGFX_COL_5, OLEDGFX_LINE_2, ch1Raw, 4U);
     OLEDGFX_ShowString(OLEDGFX_COL_10, OLEDGFX_LINE_2, "V:", OLEDGFX_Clip);
-    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_2, ch1Voltage, 1U, 2U);
+    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_2, ch1Voltage, 2U, 2U);
 
     OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "C2:", OLEDGFX_Clip);
     OLEDGFX_ShowNum(OLEDGFX_COL_5, OLEDGFX_LINE_3, ch2Raw, 4U);
     OLEDGFX_ShowString(OLEDGFX_COL_10, OLEDGFX_LINE_3, "V:", OLEDGFX_Clip);
-    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_3, ch2Voltage, 1U, 2U);
+    OLEDGFX_ShowFloat(OLEDGFX_COL_12, OLEDGFX_LINE_3, ch2Voltage, 2U, 2U);
   }
   else
   {
