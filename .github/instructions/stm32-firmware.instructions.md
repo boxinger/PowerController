@@ -1,6 +1,6 @@
 ---
 name: "STM32 Firmware Guidelines"
-description: "Use when editing STM32 firmware files under Core, User, or App, HAL peripheral setup, interrupt handlers, scheduler logic, or board-level driver code. Covers CubeMX-safe edits, embedded C style, interrupt safety, and validation expectations."
+description: "Use when editing STM32 firmware files under Core, User, or App, HAL peripheral setup, interrupt handlers, scheduler logic, board-level driver code, or firmware work that needs local STM32 reference PDFs/documents. Covers CubeMX-safe edits, embedded C style, interrupt safety, document lookup, and validation expectations."
 applyTo: "Core/**/*.c, Core/**/*.h, User/**/*.c, User/**/*.h, App/**/*.c, App/**/*.h"
 ---
 
@@ -28,6 +28,14 @@ Use these instructions when modifying generated STM32 firmware or project-specif
 - Treat variables shared with interrupts or DMA as concurrency-sensitive.
 - When changing sampling or control timing, review trigger source, period, callback path, and data consumption together.
 - Do not add blocking waits in code paths that affect real-time behavior unless the task explicitly calls for it.
+
+## Project Reference Documents
+
+- Local reference documents may be stored under `reference/` or `doc/`; `reference/` is ignored by Git and may contain large vendor PDFs.
+- When firmware behavior depends on STM32 peripheral details, register descriptions, timing, DMA routing, ADC triggering, HRTIM behavior, errata, or electrical limits, inspect the local documents before making assumptions.
+- Use the project helper script to extract only the relevant document text: `& 'D:\Python\python.exe' .\read_documents.py <document-path> --pages <range>` or `& 'D:\Python\python.exe' .\read_documents.py <document-path> --grep <pattern> --context <lines> --max-chars <limit>`.
+- Prefer narrow page ranges or keyword searches over loading an entire reference manual into context.
+- If `python` is not available in the VS Code terminal PATH, use the known interpreter path `D:\Python\python.exe`.
 
 ## Validation Expectations
 
