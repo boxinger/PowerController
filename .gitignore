@@ -18,3 +18,7 @@ MDK-ARM/*
 !MDK-ARM/*.uvprojx
 !MDK-ARM/*.s
 !MDK-ARM/*.sct
+
+__pycache__/
+
+reference/*
