@@ -84,7 +84,8 @@ typedef struct
 
 static uint8_t s_oledInitOk = 0U;
 static SAMPLE_StatusTypeDef s_sampleStatus = SAMPLE_BUSY;
-static Buck_HandleTypeDef* s_buckHandle = NULL;
+static Buck_HandleTypeDef s_buckHandle = {0};
+static volatile uint8_t s_buckControlReady = 0U;
 static volatile uint8_t s_buckDividerCounter = 0U;
 static volatile VOLOOP_StatusTypeDef s_buckLastStatus = VOLOOP_INVALID_STATE;
 static volatile Buck_StateTypeDef s_buckStateShadow = BUCK_DISABLED;
@@ -322,15 +323,15 @@ static void Buck_SetDuty(float duty)
 
 static void Buck_UpdateStateShadow(void)
 {
-  if (s_buckHandle == NULL)
+  if (s_buckControlReady == 0U)
   {
     s_buckStateShadow = BUCK_DISABLED;
     s_buckFaultShadow = BUCK_NOERROR;
     return;
   }
 
-  s_buckStateShadow = VOLOOP_Buck_GetState(s_buckHandle);
-  s_buckFaultShadow = VOLOOP_Buck_GetFaultCode(s_buckHandle);
+  s_buckStateShadow = VOLOOP_Buck_GetState(&s_buckHandle);
+  s_buckFaultShadow = VOLOOP_Buck_GetFaultCode(&s_buckHandle);
 }
 
 static const char* Buck_GetStatusText(void)
@@ -340,7 +341,7 @@ static const char* Buck_GetStatusText(void)
     return "SAMP";
   }
 
-  if (s_buckHandle == NULL)
+  if (s_buckControlReady == 0U)
   {
     return "INIT";
   }
@@ -388,24 +389,27 @@ static VOLOOP_StatusTypeDef Buck_InitControl(void)
   };
   VOLOOP_StatusTypeDef status;
 
+  s_buckControlReady = 0U;
+
   status = VOLOOP_Buck_Init(&s_buckHandle, &buckInit);
   if (status != VOLOOP_OK)
   {
     return status;
   }
 
-  status = VOLOOP_Buck_SetValue(s_buckHandle, BUCK_TARGET_OUTPUT_VOLTAGE, BUCK_TARGET_CURRENT_LIMIT);
+  status = VOLOOP_Buck_SetValue(&s_buckHandle, BUCK_TARGET_OUTPUT_VOLTAGE, BUCK_TARGET_CURRENT_LIMIT);
   if (status != VOLOOP_OK)
   {
     return status;
   }
 
-  status = VOLOOP_Buck_Start(s_buckHandle);
+  status = VOLOOP_Buck_Start(&s_buckHandle);
   if (status != VOLOOP_OK)
   {
     return status;
   }
 
+  s_buckControlReady = 1U;
   Buck_UpdateStateShadow();
   return VOLOOP_OK;
 }
@@ -425,7 +429,7 @@ void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef* hhrtim,
 
   Buck_UpdateFilteredMeasurements();
 
-  if (s_buckHandle == NULL)
+  if (s_buckControlReady == 0U)
   {
     return;
   }
@@ -437,7 +441,7 @@ void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef* hhrtim,
   }
 
   s_buckDividerCounter = 0U;
-  s_buckLastStatus = VOLOOP_Buck_Sync(s_buckHandle);
+  s_buckLastStatus = VOLOOP_Buck_Sync(&s_buckHandle);
   Buck_UpdateStateShadow();
 }
 
