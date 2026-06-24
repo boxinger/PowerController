@@ -178,11 +178,6 @@ int main(void)
 
   Scheduler_Init();
 
-  if (HAL_TIM_Base_Start_IT(&htim6) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
   LED_SetLED1State(0U);
   LED_SetLED2State(0U);
   LED_SetLED3State(0U);

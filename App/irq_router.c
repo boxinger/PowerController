@@ -37,7 +37,9 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  Scheduler_TIMPeriodElapsedCallback(htim);
+    if (htim->Instance == TIM6){
+        Scheduler_TIMPeriodElapsedCallback();
+    }
 }
 
 void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef *hhrtim,

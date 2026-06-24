@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include <stdint.h>
 #include "oledgfx.h"
+#include "scheduler_port.h"
 
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button1State = Scheduler_Unpending;
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button2State = Scheduler_Unpending;
@@ -9,6 +10,7 @@ volatile Scheduler_PendingStatusTypeDef Scheduler_Button4State = Scheduler_Unpen
 volatile Scheduler_PendingStatusTypeDef Scheduler_EncoderButtonState = Scheduler_Unpending;
 
 void Scheduler_Init(void){
+    Scheduler_Port_Init();
 }
 
 __weak void Scheduler_Button1Callback(void){}
@@ -85,9 +87,6 @@ void Scheduler_Update(void){
 
 }
 
-void Scheduler_TIMPeriodElapsedCallback(TIM_HandleTypeDef *htim){
-    if(htim->Instance == TIM6){
-        Scheduler_Update();
-    }
+void Scheduler_TIMPeriodElapsedCallback(void){
+    Scheduler_Update();
 }
-
