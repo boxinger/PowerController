@@ -24,7 +24,9 @@
 	*                   @arg PWM_TIMERD
 	*                   @arg PWM_TIMERE
 	*                   @arg PWM_TIMERF
-	* @note   PWM_Init only configures and starts the requested timer PWM template.
+	* @note   PWM_Init configures and starts the requested timer PWM template.
+	*         It also starts the HRTIM master counter with interrupts enabled,
+	*         because the PWM timer reset source is HRTIM_TIMRESETTRIGGER_MASTER_PER.
 	*         HRTIM common initialization and GPIO alternate function configuration
 	*         must still be provided by external board-level code.
 */
@@ -46,7 +48,9 @@ extern const uint32_t pwm_output2s[PWM_TIMER_COUNT];
 extern const uint32_t pwm_delayed_protection_modes[PWM_TIMER_COUNT];
 
 HAL_StatusTypeDef PWM_Init(PWM_TimerIdTypeDef Timer);
-HAL_StatusTypeDef PWM_DeInit(uint32_t Timer);
+HAL_StatusTypeDef PWM_DeInit(PWM_TimerIdTypeDef Timer);
+HAL_StatusTypeDef PWM_MasterStart(void);
+HAL_StatusTypeDef PWM_MasterStop(void);
 
 static inline void PWM_Start(PWM_TimerIdTypeDef Timer){
 	HAL_HRTIM_WaveformOutputStart(&PWM_TIMER, pwm_output1s[Timer]);

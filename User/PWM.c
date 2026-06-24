@@ -1,6 +1,8 @@
 #include "PWM.h"
 
 static uint32_t pwm_initialized_timers = 0U;
+static uint32_t pwm_started_timers = 0U;
+static uint8_t pwm_master_started = 0U;
 
 const uint32_t pwm_hal_timer_ids[PWM_TIMER_COUNT] = {
 	HRTIM_TIMERID_TIMER_A,
@@ -168,9 +170,74 @@ HAL_StatusTypeDef PWM_Init(PWM_TimerIdTypeDef Timer){
 	}
 
 	halTimerId = pwm_hal_timer_ids[Timer];
-	return HAL_HRTIM_WaveformCounterStart(&PWM_TIMER, halTimerId);
+	if (pwm_master_started == 0U) {
+		status = HAL_HRTIM_WaveformCountStart_IT(&PWM_TIMER, HRTIM_TIMERID_MASTER | halTimerId);
+		if (status == HAL_OK) {
+			pwm_master_started = 1U;
+			pwm_started_timers |= halTimerId;
+		}
+
+		return status;
+	}
+
+	status = HAL_HRTIM_WaveformCountStart(&PWM_TIMER, halTimerId);
+	if (status == HAL_OK) {
+		pwm_started_timers |= halTimerId;
+	}
+
+	return status;
 }
 
-HAL_StatusTypeDef PWM_DeInit(uint32_t Timer){
-	return HAL_HRTIM_WaveformCounterStop(&PWM_TIMER, Timer);
+HAL_StatusTypeDef PWM_DeInit(PWM_TimerIdTypeDef Timer){
+	HAL_StatusTypeDef status;
+	uint32_t halTimerId;
+
+	if (Timer >= PWM_TIMER_COUNT) {
+		return HAL_ERROR;
+	}
+
+	halTimerId = pwm_hal_timer_ids[Timer];
+	status = HAL_HRTIM_WaveformCountStop(&PWM_TIMER, halTimerId);
+	if (status != HAL_OK) {
+		return status;
+	}
+
+	pwm_started_timers &= ~halTimerId;
+	if (pwm_started_timers == 0U) {
+		status = PWM_MasterStop();
+	}
+
+	return status;
+}
+
+HAL_StatusTypeDef PWM_MasterStart(void)
+{
+	HAL_StatusTypeDef status;
+
+	if (pwm_master_started != 0U) {
+		return HAL_OK;
+	}
+
+	status = HAL_HRTIM_WaveformCountStart_IT(&PWM_TIMER, HRTIM_TIMERID_MASTER);
+	if (status == HAL_OK) {
+		pwm_master_started = 1U;
+	}
+
+	return status;
+}
+
+HAL_StatusTypeDef PWM_MasterStop(void)
+{
+	HAL_StatusTypeDef status;
+
+	if (pwm_master_started == 0U) {
+		return HAL_OK;
+	}
+
+	status = HAL_HRTIM_WaveformCountStop_IT(&PWM_TIMER, HRTIM_TIMERID_MASTER);
+	if (status == HAL_OK) {
+		pwm_master_started = 0U;
+	}
+
+	return status;
 }
