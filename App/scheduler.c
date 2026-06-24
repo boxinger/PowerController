@@ -1,5 +1,6 @@
 #include "scheduler.h"
 #include <stdint.h>
+#include "oledgfx.h"
 
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button1State = Scheduler_Unpending;
 volatile Scheduler_PendingStatusTypeDef Scheduler_Button2State = Scheduler_Unpending;
@@ -60,10 +61,11 @@ static void s_buttonUpdate(void){
 volatile Scheduler_PendingStatusTypeDef Scheduler_OLEDUpdateState = Scheduler_Unpending;
 static void s_OLEDUpdate(void){
     Scheduler_OLEDUpdateState = Scheduler_Pending;
+    (void)OLEDGFX_Update();
 }
 
 #define Scheduler_ButtonUpdateScaler 50U
-#define Scheduler_OLEDUpdateScaler 10U
+#define Scheduler_OLEDUpdateScaler 20U
 static uint16_t s_buttonCounter = 0U;
 static uint16_t s_oledCounter = 0U;
 

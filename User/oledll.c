@@ -8,6 +8,12 @@
 #define OLEDLL_CTRL_DATA  0x40U
 #define OLEDLL_PAGE_COUNT (OLEDLL_HEIGHT / 8U)
 
+typedef enum {
+	OLEDLL_TX_IDLE = 0U,
+	OLEDLL_TX_WINDOW,
+	OLEDLL_TX_FRAME
+} OLEDLL_TxStateTypeDef;
+
 /*
  * draw_buf: current writable back buffer.
  * ready_buf: latest completed frame waiting for transfer.
@@ -23,13 +29,24 @@ static uint8_t* volatile busy_buf = NULL;
 
 static volatile uint8_t oled_initialized = 0U;
 static volatile uint8_t oled_error = 0U;
+static volatile OLEDLL_TxStateTypeDef oled_tx_state = OLEDLL_TX_IDLE;
+
+static uint8_t oled_window_cmds[] = {
+	0x21U,
+	0x00U,
+	(uint8_t)(OLEDLL_WIDTH - 1U),
+	0x22U,
+	0x00U,
+	(uint8_t)(OLEDLL_PAGE_COUNT - 1U)
+};
 
 static uint32_t OLEDLL_EnterCritical(void);
 static void OLEDLL_ExitCritical(uint32_t primask);
 static OLEDLL_StatusTypeDef OLEDLL_WriteCommand(uint8_t cmd);
 static OLEDLL_StatusTypeDef OLEDLL_WriteCommandList(const uint8_t* cmds, uint32_t len);
 static OLEDLL_StatusTypeDef OLEDLL_SetFullWindow(void);
-static OLEDLL_StatusTypeDef OLEDLL_StartTransfer(uint8_t* buffer);
+static OLEDLL_StatusTypeDef OLEDLL_StartWindowTransfer(void);
+static OLEDLL_StatusTypeDef OLEDLL_StartDataTransfer(uint8_t* buffer);
 static uint8_t* OLEDLL_FindFreeBuffer(void);
 static void OLEDLL_SubmitDrawBuffer(void);
 
@@ -79,25 +96,24 @@ static OLEDLL_StatusTypeDef OLEDLL_WriteCommandList(const uint8_t* cmds, uint32_
 }
 
 static OLEDLL_StatusTypeDef OLEDLL_SetFullWindow(void) {
-	static const uint8_t window_cmds[] = {
-		0x21U,
-		0x00U,
-		(uint8_t)(OLEDLL_WIDTH - 1U),
-		0x22U,
-		0x00U,
-		(uint8_t)(OLEDLL_PAGE_COUNT - 1U)
-	};
-
-	return OLEDLL_WriteCommandList(window_cmds, (uint32_t)sizeof(window_cmds));
+	return OLEDLL_WriteCommandList(oled_window_cmds, (uint32_t)sizeof(oled_window_cmds));
 }
 
-static OLEDLL_StatusTypeDef OLEDLL_StartTransfer(uint8_t* buffer) {
+static OLEDLL_StatusTypeDef OLEDLL_StartWindowTransfer(void) {
+	if (HAL_I2C_Mem_Write_DMA(&OLEDLL_HANDLE,
+							  OLEDLL_ADDR,
+							  OLEDLL_CTRL_CMD,
+							  I2C_MEMADD_SIZE_8BIT,
+							  oled_window_cmds,
+							  (uint16_t)sizeof(oled_window_cmds)) == HAL_OK) {
+		return OLEDLL_OK;
+	}
+	return OLEDLL_ERROR;
+}
+
+static OLEDLL_StatusTypeDef OLEDLL_StartDataTransfer(uint8_t* buffer) {
 	if (buffer == NULL) {
 		return OLEDLL_INVALID_PARAM;
-	}
-
-	if (OLEDLL_SetFullWindow() != OLEDLL_OK) {
-		return OLEDLL_ERROR;
 	}
 
 	if (HAL_I2C_Mem_Write_DMA(&OLEDLL_HANDLE,
@@ -178,6 +194,7 @@ OLEDLL_StatusTypeDef OLEDLL_Init(void) {
 	draw_buf = fb0;
 	ready_buf = NULL;
 	busy_buf = NULL;
+	oled_tx_state = OLEDLL_TX_IDLE;
 	oled_initialized = 0U;
 	oled_error = 0U;
 
@@ -242,20 +259,23 @@ OLEDLL_StatusTypeDef OLEDLL_Update(void) {
 		return OLEDLL_ERROR;
 	}
 
-	if (busy_buf != NULL) {
+	local_send_buf = NULL;
+
+	primask = OLEDLL_EnterCritical();
+	if ((busy_buf != NULL) || (oled_tx_state != OLEDLL_TX_IDLE)) {
+		OLEDLL_ExitCritical(primask);
 		return OLEDLL_BUSY;
 	}
 
 	if (ready_buf == NULL) {
+		OLEDLL_ExitCritical(primask);
 		return OLEDLL_OK;
 	}
 
-	local_send_buf = NULL;
-
-	primask = OLEDLL_EnterCritical();
 	if ((busy_buf == NULL) && (ready_buf != NULL)) {
 		busy_buf = ready_buf;
 		ready_buf = NULL;
+		oled_tx_state = OLEDLL_TX_WINDOW;
 		local_send_buf = (uint8_t*)busy_buf;
 	}
 	OLEDLL_ExitCritical(primask);
@@ -266,9 +286,10 @@ OLEDLL_StatusTypeDef OLEDLL_Update(void) {
 
 	oled_error = 0U;
 
-	if (OLEDLL_StartTransfer(local_send_buf) != OLEDLL_OK) {
+	if (OLEDLL_StartWindowTransfer() != OLEDLL_OK) {
 		primask = OLEDLL_EnterCritical();
 		busy_buf = NULL;
+		oled_tx_state = OLEDLL_TX_IDLE;
 		oled_error = 1U;
 		OLEDLL_ExitCritical(primask);
 		return OLEDLL_ERROR;
@@ -279,10 +300,30 @@ OLEDLL_StatusTypeDef OLEDLL_Update(void) {
 
 void OLEDLL_TxCpltCallback(void) {
 	uint32_t primask;
+	uint8_t* local_send_buf = NULL;
 
 	primask = OLEDLL_EnterCritical();
-	busy_buf = NULL;
+	if (oled_tx_state == OLEDLL_TX_WINDOW) {
+		local_send_buf = (uint8_t*)busy_buf;
+		oled_tx_state = OLEDLL_TX_FRAME;
+	} else if (oled_tx_state == OLEDLL_TX_FRAME) {
+		busy_buf = NULL;
+		oled_tx_state = OLEDLL_TX_IDLE;
+	} else {
+		busy_buf = NULL;
+		oled_tx_state = OLEDLL_TX_IDLE;
+	}
 	OLEDLL_ExitCritical(primask);
+
+	if (local_send_buf != NULL) {
+		if (OLEDLL_StartDataTransfer(local_send_buf) != OLEDLL_OK) {
+			primask = OLEDLL_EnterCritical();
+			busy_buf = NULL;
+			oled_tx_state = OLEDLL_TX_IDLE;
+			oled_error = 1U;
+			OLEDLL_ExitCritical(primask);
+		}
+	}
 }
 
 void OLEDLL_ErrorCallback(void) {
@@ -290,6 +331,7 @@ void OLEDLL_ErrorCallback(void) {
 
 	primask = OLEDLL_EnterCritical();
 	busy_buf = NULL;
+	oled_tx_state = OLEDLL_TX_IDLE;
 	oled_error = 1U;
 	OLEDLL_ExitCritical(primask);
 }
