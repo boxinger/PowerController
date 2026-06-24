@@ -61,20 +61,24 @@
         {
             "label": "flash-debug-elf",
             "type": "shell",
-            "command": "C:/ST/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe",
-            "args": [
-                "-c",
-                "port=SWD",
-                "mode=UR",
-                "-w",
-                "${workspaceFolder}/build/${config:cmake.defaultBuildPreset}/${workspaceFolderBasename}.elf",
-                "-v",
-                "-rst"
-            ],
+            "command": "\"C:/ST/STM32CubeCLT_1.21.0/STM32CubeProgrammer/bin/STM32_Programmer_CLI.exe\" -c port=SWD mode=UR -w \"$(pwd)/build/${config:cmake.defaultBuildPreset}/${workspaceFolderBasename}.elf\" -v -rst",
+            "args": [],
             "options": {
-                "cwd": "${workspaceFolder}"
+                "cwd": "${workspaceFolder}",
+                "shell": {
+                    "executable": "D:\\Git\\bin\\bash.exe",
+                    "args": [
+                        "--login",
+                        "-c"
+                    ]
+                }
             },
-            "problemMatcher": []
+            "problemMatcher": [],
+            "dependsOn": "cmake-configure-debug",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
         },
         {
             "label": "build-and-flash",
