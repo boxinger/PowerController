@@ -43,5 +43,6 @@ __weak void Scheduler_EncoderButtonCallback(void);
 void Scheduler_Init(void);
 
 void Scheduler_Update(void);
+void Scheduler_TIMPeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 #endif

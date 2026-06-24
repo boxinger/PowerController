@@ -139,6 +139,7 @@ static void Buck_PrimeMeasurementFilters(void);
 static void Buck_UpdateFilteredMeasurements(void);
 static void Buck_UpdateStateShadow(void);
 static VOLOOP_StatusTypeDef Buck_InitControl(void);
+static void OLED_DrawDebugAnimation(uint32_t frameIndex);
 static void OLED_DrawSampleFrame(uint32_t frameIndex);
 
 /* USER CODE END PFP */
@@ -414,7 +415,7 @@ static VOLOOP_StatusTypeDef Buck_InitControl(void)
   return VOLOOP_OK;
 }
 
-void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef* hhrtim,
+void App_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef* hhrtim,
                                        uint32_t TimerIdx)
 {
   if ((hhrtim != &hhrtim1) || (TimerIdx != HRTIM_TIMERINDEX_MASTER))
@@ -445,13 +446,57 @@ void HAL_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef* hhrtim,
   Buck_UpdateStateShadow();
 }
 
+static void OLED_DrawDebugAnimation(uint32_t frameIndex)
+{
+  const uint16_t baseX = 112U;
+  const uint16_t baseY = 0U;
+  const uint8_t size = 15U;
+  uint8_t offset;
+  uint8_t step;
+  uint16_t dotX;
+  uint16_t dotY;
+
+  for (offset = 0U; offset <= size; offset++)
+  {
+    OLEDGFX_DrawPoint((uint16_t)(baseX + offset), baseY, 1U);
+    OLEDGFX_DrawPoint((uint16_t)(baseX + offset), (uint16_t)(baseY + size), 1U);
+    OLEDGFX_DrawPoint(baseX, (uint16_t)(baseY + offset), 1U);
+    OLEDGFX_DrawPoint((uint16_t)(baseX + size), (uint16_t)(baseY + offset), 1U);
+  }
+
+  step = (uint8_t)(frameIndex % (uint32_t)((size - 1U) * 4U));
+  if (step < (size - 1U))
+  {
+    dotX = (uint16_t)(baseX + 1U + step);
+    dotY = (uint16_t)(baseY + 1U);
+  }
+  else if (step < (uint8_t)((size - 1U) * 2U))
+  {
+    dotX = (uint16_t)(baseX + size - 2U);
+    dotY = (uint16_t)(baseY + 1U + (step - (size - 1U)));
+  }
+  else if (step < (uint8_t)((size - 1U) * 3U))
+  {
+    dotX = (uint16_t)(baseX + size - 2U - (step - (uint8_t)((size - 1U) * 2U)));
+    dotY = (uint16_t)(baseY + size - 2U);
+  }
+  else
+  {
+    dotX = (uint16_t)(baseX + 1U);
+    dotY = (uint16_t)(baseY + size - 2U - (step - (uint8_t)((size - 1U) * 3U)));
+  }
+
+  OLEDGFX_DrawPoint(dotX, dotY, 1U);
+  OLEDGFX_DrawPoint((uint16_t)(dotX + 1U), dotY, 1U);
+  OLEDGFX_DrawPoint(dotX, (uint16_t)(dotY + 1U), 1U);
+  OLEDGFX_DrawPoint((uint16_t)(dotX + 1U), (uint16_t)(dotY + 1U), 1U);
+}
+
 static void OLED_DrawSampleFrame(uint32_t frameIndex)
 {
   float inputVoltage;
   float inductorCurrent;
   float outputVoltage;
-
-  (void)frameIndex;
 
   (void)OLEDGFX_Clear();
 
@@ -486,6 +531,8 @@ static void OLED_DrawSampleFrame(uint32_t frameIndex)
     OLEDGFX_ShowNum(OLEDGFX_COL_7, OLEDGFX_LINE_2, (uint32_t)s_sampleStatus, 1U);
     OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_4, "Buck off", OLEDGFX_Clip);
   }
+
+  OLED_DrawDebugAnimation(frameIndex);
 
   (void)OLEDGFX_Submit();
 }
@@ -535,10 +582,6 @@ int main(void)
   Encoder_Init();
   Encoder_Clear();
 
-  if (HAL_HRTIM_WaveformCountStart_IT(&PWM_TIMER, HRTIM_TIMERID_MASTER) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (PWM_Init(PWM_TIMERA) != HAL_OK)
   {
     Error_Handler();
@@ -571,10 +614,7 @@ int main(void)
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
     OLED_DrawSampleFrame(0U);
-    if (OLEDGFX_Update() != OLEDGFX_ERROR)
-    {
-      s_oledInitOk = 1U;
-    }
+    s_oledInitOk = 1U;
   }
 
 
@@ -602,7 +642,6 @@ int main(void)
       if (s_oledInitOk != 0U)
       {
         OLED_DrawSampleFrame(frameIndex++);
-        (void)OLEDGFX_Update();
       }
     }
 
@@ -684,30 +723,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-  if (hi2c->Instance == I2C1)
-  {
-    OLEDGFX_TxCpltCallback();
-  }
-}
-
-void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
-{
-  if (hi2c->Instance == I2C1)
-  {
-    OLEDGFX_TxCpltCallback();
-  }
-}
-
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c)
-{
-  if (hi2c->Instance == I2C1)
-  {
-    OLEDGFX_ErrorCallback();
-  }
-}
 
 /* USER CODE END 4 */
 

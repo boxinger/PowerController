@@ -85,7 +85,7 @@ void Scheduler_Update(void){
 
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
+void Scheduler_TIMPeriodElapsedCallback(TIM_HandleTypeDef *htim){
     if(htim->Instance == TIM6){
         Scheduler_Update();
     }
