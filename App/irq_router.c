@@ -4,8 +4,12 @@
 #include "scheduler.h"
 #include "tim.h"
 
-void App_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef *hhrtim,
-                                       uint32_t TimerIdx);
+__weak void App_HRTIM_RepetitionEventCallback(HRTIM_HandleTypeDef *hhrtim,
+                                              uint32_t TimerIdx)
+{
+  (void)hhrtim;
+  (void)TimerIdx;
+}
 
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
