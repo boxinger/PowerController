@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dac.h"
 #include "dma.h"
 #include "hrtim.h"
 #include "i2c.h"
@@ -32,8 +33,8 @@
 #include "oledgfx.h"
 #include "buttonAndLED.h"
 #include "scheduler.h"
-#include "sample.h"
 #include "PWM.h"
+#include "analogOutput.h"
 
 /* USER CODE END Includes */
 
@@ -44,6 +45,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+#define ANALOG_OUTPUT_TEST_INITIAL_VOLTAGE (1.4f)
+#define ANALOG_OUTPUT_TEST_STEP_VOLTAGE (0.1f)
+#define ANALOG_OUTPUT_TEST_MIN_VOLTAGE (0.0f)
+#define ANALOG_OUTPUT_TEST_MAX_VOLTAGE (AnalogOutput_VoltageReference)
 
 /* USER CODE END PD */
 
@@ -57,7 +63,7 @@
 /* USER CODE BEGIN PV */
 
 static uint8_t s_oledInitOk = 0U;
-static uint8_t s_sampleInitOk = 0U;
+static float s_analogOutputVoltage = ANALOG_OUTPUT_TEST_INITIAL_VOLTAGE;
 
 /* USER CODE END PV */
 
@@ -65,47 +71,38 @@ static uint8_t s_sampleInitOk = 0U;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void OLED_DrawAdcFrame(uint32_t frameIndex);
+static void AnalogOutputTest_DrawFrame(void);
+static void AnalogOutputTest_SetVoltage(float voltage);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void OLED_DrawAdcLine(uint16_t y, const char* label, Sample_ChannelTypeDef channel)
-{
-  OLEDGFX_ShowString(OLEDGFX_COL_1, y, label, OLEDGFX_Clip);
-  OLEDGFX_ShowFloat(OLEDGFX_COL_7, y, Sample_GetPinVoltage(channel), 1U, 3U);
-  OLEDGFX_ShowString(OLEDGFX_COL_12, y, "V", OLEDGFX_Clip);
-}
-
-static void OLED_DrawAdcFrame(uint32_t frameIndex)
+static void AnalogOutputTest_DrawFrame(void)
 {
   (void)OLEDGFX_Clear();
 
-  if (s_sampleInitOk == 0U)
-  {
-    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "ADC init error", OLEDGFX_Clip);
-    (void)OLEDGFX_Submit();
-    return;
-  }
-
-  if ((frameIndex & 1U) == 0U)
-  {
-    OLED_DrawAdcLine(OLEDGFX_LINE_1, "CH1", Sample_CH1);
-    OLED_DrawAdcLine(OLEDGFX_LINE_2, "CH2", Sample_CH2);
-    OLED_DrawAdcLine(OLEDGFX_LINE_3, "CH3", Sample_CH3);
-    OLED_DrawAdcLine(OLEDGFX_LINE_4, "CH7", Sample_CH7);
-  }
-  else
-  {
-    OLED_DrawAdcLine(OLEDGFX_LINE_1, "CH8", Sample_CH8);
-    OLED_DrawAdcLine(OLEDGFX_LINE_2, "CH9", Sample_CH9);
-    OLED_DrawAdcLine(OLEDGFX_LINE_3, "CH12", Sample_CH12);
-    OLED_DrawAdcLine(OLEDGFX_LINE_4, "CH15", Sample_CH15);
-  }
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "DAC OUT1 PA4", OLEDGFX_Clip);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "OUT", OLEDGFX_Clip);
+  OLEDGFX_ShowFloat(OLEDGFX_COL_5, OLEDGFX_LINE_2, s_analogOutputVoltage, 1U, 2U);
+  OLEDGFX_ShowString(OLEDGFX_COL_10, OLEDGFX_LINE_2, "V", OLEDGFX_Clip);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "B1 -0.1V", OLEDGFX_Clip);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_4, "B2 +0.1V", OLEDGFX_Clip);
 
   (void)OLEDGFX_Submit();
+}
+
+static void AnalogOutputTest_SetVoltage(float voltage)
+{
+  if (voltage < ANALOG_OUTPUT_TEST_MIN_VOLTAGE) {
+    voltage = ANALOG_OUTPUT_TEST_MIN_VOLTAGE;
+  } else if (voltage > ANALOG_OUTPUT_TEST_MAX_VOLTAGE) {
+    voltage = ANALOG_OUTPUT_TEST_MAX_VOLTAGE;
+  }
+
+  s_analogOutputVoltage = voltage;
+  AnalogOutput_SetVoltage(s_analogOutputVoltage);
 }
 
 /* USER CODE END 0 */
@@ -148,7 +145,11 @@ int main(void)
   MX_TIM6_Init();
   MX_ADC2_Init();
   MX_ADC3_Init();
+  MX_DAC1_Init();
   /* USER CODE BEGIN 2 */
+
+  AnalogOutput_Init();
+  AnalogOutputTest_SetVoltage(ANALOG_OUTPUT_TEST_INITIAL_VOLTAGE);
 
   Encoder_Init();
   Encoder_Clear();
@@ -160,16 +161,12 @@ int main(void)
   LED_SetLED3State(0U);
   LED_SetLED4State(0U);
 
-  if (Sample_Init() == SAMPLE_OK)
-  {
-    s_sampleInitOk = 1U;
-    (void)PWM_MasterStart();
-  }
+  (void)PWM_MasterStart();
 
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
     s_oledInitOk = 1U;
-    OLED_DrawAdcFrame(0U);
+    AnalogOutputTest_DrawFrame();
   }
 
 
@@ -180,7 +177,6 @@ int main(void)
   while (1)
   {
     static uint32_t lastBlinkTick = 0U;
-    static uint32_t frameIndex = 0U;
     uint32_t now;
 
     now = HAL_GetTick();
@@ -196,33 +192,38 @@ int main(void)
       Scheduler_ClearOLEDUpdatePending();
       if (s_oledInitOk != 0U)
       {
-        // OLED_DrawAdcFrame(frameIndex++);
-        OLED_DrawAdcFrame(0);
+        AnalogOutputTest_DrawFrame();
       }
     }
 
     if (Scheduler_Button1State == Scheduler_Pending)
     {
       Scheduler_ClearButton1Pending();
-      HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+      AnalogOutputTest_SetVoltage(s_analogOutputVoltage - ANALOG_OUTPUT_TEST_STEP_VOLTAGE);
+      if (s_oledInitOk != 0U)
+      {
+        AnalogOutputTest_DrawFrame();
+      }
     }
 
     if (Scheduler_Button2State == Scheduler_Pending)
     {
       Scheduler_ClearButton2Pending();
-      HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
+      AnalogOutputTest_SetVoltage(s_analogOutputVoltage + ANALOG_OUTPUT_TEST_STEP_VOLTAGE);
+      if (s_oledInitOk != 0U)
+      {
+        AnalogOutputTest_DrawFrame();
+      }
     }
 
     if (Scheduler_Button3State == Scheduler_Pending)
     {
       Scheduler_ClearButton3Pending();
-      HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
     }
 
     if (Scheduler_Button4State == Scheduler_Pending)
     {
       Scheduler_ClearButton4Pending();
-      HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
     }
 
     /* USER CODE END WHILE */

@@ -52,6 +52,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/User/oledgfx.c
     ${CMAKE_CURRENT_SOURCE_DIR}/User/encoder.c
     ${CMAKE_CURRENT_SOURCE_DIR}/User/sample.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/User/analogOutput.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/scheduler.c
     ${CMAKE_CURRENT_SOURCE_DIR}/App/irq_router.c
 )

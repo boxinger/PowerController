@@ -38,7 +38,6 @@
         * Output
         * EVENT_OUT
         * EXTI
-     PA4   ------> COMP_DAC11_group
 */
 void MX_GPIO_Init(void)
 {
@@ -71,12 +70,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(BLED_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : Sample_CH4_Pin */
-  GPIO_InitStruct.Pin = Sample_CH4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Sample_CH4_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Button4_Pin */
   GPIO_InitStruct.Pin = Button4_Pin;

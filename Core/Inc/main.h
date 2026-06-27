@@ -77,8 +77,8 @@ void Error_Handler(void);
 #define Sample_CH2_GPIO_Port GPIOA
 #define Sample_CH3_Pin GPIO_PIN_2
 #define Sample_CH3_GPIO_Port GPIOA
-#define Sample_CH4_Pin GPIO_PIN_4
-#define Sample_CH4_GPIO_Port GPIOA
+#define AnalogOutput_CH4_Pin GPIO_PIN_4
+#define AnalogOutput_CH4_GPIO_Port GPIOA
 #define Sample_CH15_Pin GPIO_PIN_0
 #define Sample_CH15_GPIO_Port GPIOB
 #define Sample_CH12_Pin GPIO_PIN_1
