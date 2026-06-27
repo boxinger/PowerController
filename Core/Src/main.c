@@ -32,6 +32,8 @@
 #include "oledgfx.h"
 #include "buttonAndLED.h"
 #include "scheduler.h"
+#include "sample.h"
+#include "PWM.h"
 
 /* USER CODE END Includes */
 
@@ -55,6 +57,7 @@
 /* USER CODE BEGIN PV */
 
 static uint8_t s_oledInitOk = 0U;
+static uint8_t s_sampleInitOk = 0U;
 
 /* USER CODE END PV */
 
@@ -62,71 +65,45 @@ static uint8_t s_oledInitOk = 0U;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-static void OLED_DrawDebugAnimation(uint32_t frameIndex);
-static void OLED_DrawStatusFrame(uint32_t frameIndex);
+static void OLED_DrawAdcFrame(uint32_t frameIndex);
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void OLED_DrawDebugAnimation(uint32_t frameIndex)
+static void OLED_DrawAdcLine(uint16_t y, const char* label, Sample_ChannelTypeDef channel)
 {
-  const uint16_t baseX = 112U;
-  const uint16_t baseY = 0U;
-  const uint8_t size = 15U;
-  uint8_t offset;
-  uint8_t step;
-  uint16_t dotX;
-  uint16_t dotY;
-
-  for (offset = 0U; offset <= size; offset++)
-  {
-    OLEDGFX_DrawPoint((uint16_t)(baseX + offset), baseY, 1U);
-    OLEDGFX_DrawPoint((uint16_t)(baseX + offset), (uint16_t)(baseY + size), 1U);
-    OLEDGFX_DrawPoint(baseX, (uint16_t)(baseY + offset), 1U);
-    OLEDGFX_DrawPoint((uint16_t)(baseX + size), (uint16_t)(baseY + offset), 1U);
-  }
-
-  step = (uint8_t)(frameIndex % (uint32_t)((size - 1U) * 4U));
-  if (step < (size - 1U))
-  {
-    dotX = (uint16_t)(baseX + 1U + step);
-    dotY = (uint16_t)(baseY + 1U);
-  }
-  else if (step < (uint8_t)((size - 1U) * 2U))
-  {
-    dotX = (uint16_t)(baseX + size - 2U);
-    dotY = (uint16_t)(baseY + 1U + (step - (size - 1U)));
-  }
-  else if (step < (uint8_t)((size - 1U) * 3U))
-  {
-    dotX = (uint16_t)(baseX + size - 2U - (step - (uint8_t)((size - 1U) * 2U)));
-    dotY = (uint16_t)(baseY + size - 2U);
-  }
-  else
-  {
-    dotX = (uint16_t)(baseX + 1U);
-    dotY = (uint16_t)(baseY + size - 2U - (step - (uint8_t)((size - 1U) * 3U)));
-  }
-
-  OLEDGFX_DrawPoint(dotX, dotY, 1U);
-  OLEDGFX_DrawPoint((uint16_t)(dotX + 1U), dotY, 1U);
-  OLEDGFX_DrawPoint(dotX, (uint16_t)(dotY + 1U), 1U);
-  OLEDGFX_DrawPoint((uint16_t)(dotX + 1U), (uint16_t)(dotY + 1U), 1U);
+  OLEDGFX_ShowString(OLEDGFX_COL_1, y, label, OLEDGFX_Clip);
+  OLEDGFX_ShowFloat(OLEDGFX_COL_7, y, Sample_GetPinVoltage(channel), 1U, 3U);
+  OLEDGFX_ShowString(OLEDGFX_COL_12, y, "V", OLEDGFX_Clip);
 }
 
-static void OLED_DrawStatusFrame(uint32_t frameIndex)
+static void OLED_DrawAdcFrame(uint32_t frameIndex)
 {
   (void)OLEDGFX_Clear();
 
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "PowerController", OLEDGFX_Clip);
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_2, "OLED running", OLEDGFX_Clip);
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_3, "B1-B4 toggle LED", OLEDGFX_Clip);
-  OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_4, "Frame:", OLEDGFX_Clip);
-  OLEDGFX_ShowNum(OLEDGFX_COL_8, OLEDGFX_LINE_4, frameIndex, 5U);
+  if (s_sampleInitOk == 0U)
+  {
+    OLEDGFX_ShowString(OLEDGFX_COL_1, OLEDGFX_LINE_1, "ADC init error", OLEDGFX_Clip);
+    (void)OLEDGFX_Submit();
+    return;
+  }
 
-  OLED_DrawDebugAnimation(frameIndex);
+  if ((frameIndex & 1U) == 0U)
+  {
+    OLED_DrawAdcLine(OLEDGFX_LINE_1, "CH1", Sample_CH1);
+    OLED_DrawAdcLine(OLEDGFX_LINE_2, "CH2", Sample_CH2);
+    OLED_DrawAdcLine(OLEDGFX_LINE_3, "CH3", Sample_CH3);
+    OLED_DrawAdcLine(OLEDGFX_LINE_4, "CH7", Sample_CH7);
+  }
+  else
+  {
+    OLED_DrawAdcLine(OLEDGFX_LINE_1, "CH8", Sample_CH8);
+    OLED_DrawAdcLine(OLEDGFX_LINE_2, "CH9", Sample_CH9);
+    OLED_DrawAdcLine(OLEDGFX_LINE_3, "CH12", Sample_CH12);
+    OLED_DrawAdcLine(OLEDGFX_LINE_4, "CH15", Sample_CH15);
+  }
 
   (void)OLEDGFX_Submit();
 }
@@ -183,10 +160,16 @@ int main(void)
   LED_SetLED3State(0U);
   LED_SetLED4State(0U);
 
+  if (Sample_Init() == SAMPLE_OK)
+  {
+    s_sampleInitOk = 1U;
+    (void)PWM_MasterStart();
+  }
+
   if (OLEDGFX_Init() == OLEDGFX_OK)
   {
-    OLED_DrawStatusFrame(0U);
     s_oledInitOk = 1U;
+    OLED_DrawAdcFrame(0U);
   }
 
 
@@ -213,7 +196,8 @@ int main(void)
       Scheduler_ClearOLEDUpdatePending();
       if (s_oledInitOk != 0U)
       {
-        OLED_DrawStatusFrame(frameIndex++);
+        // OLED_DrawAdcFrame(frameIndex++);
+        OLED_DrawAdcFrame(0);
       }
     }
 

@@ -3,14 +3,14 @@
 
 #include <stdint.h>
 
-#define SAMPLE_VoltageReference (2.907f)
+#define SAMPLE_VoltageReference (2.92f)
 #define SAMPLE_ADCResolution (4096U)
 
 typedef enum {
     Sample_CH1 = 0,
     Sample_CH2,
     Sample_CH3,
-    Sample_CH4,
+    // Sample_CH4,
     Sample_CH7,
     Sample_CH8, 
     Sample_CH9,
